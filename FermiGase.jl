@@ -1,5 +1,5 @@
 using Distributed
-nprocs()<6 && addprocs(6-nprocs())
+nprocs()<16 && addprocs(16-nprocs())
 using SharedArrays
 
 @everywhere include("src/SpinHall.jl")
@@ -190,51 +190,3 @@ save("data/FermiGase_T.hdf5",Dict(
     "cs_xx_re" => real.(cs_xx),
     "cs_xx_im"=>imag.(cs_xx))
 )
-
-
-
-
-
-
-
-
-
-
-
-## ------------- check -------------
-kmesh = mymesh([-0.5.*(lat.b[:,1].+lat.b[:,2]), lat.b[:,1], lat.b[:,2]],[512,512])
-w = range(-3,3,256)
-η = 0.1
-T = 0.05
-ρu= 1
-t = time()
-mu = cal_mu(lat,kmesh,4,ρu,T)
-println("mu:",time()-t)
-
-t = time()
-X = FermiHall(kmesh,lat,w,mu,η,T)
-println("time_used:",time()-t)
-
-##
-
-begin
-    f,_,hm = heatmap(imag.(X.jxjy[129,:,:]),axis=(aspect=1,),colormap=:bwr)
-    Colorbar(f[1,2],hm)
-    f
-end
-
-Xxx = dropdims(sum(X.jxjx,dims=(2,3)),dims=(2,3))./(size(kmesh,2)*size(kmesh,3))
-σxx.= (Xxx.+2).*(1im)
-begin
-    title = @sprintf("(v_0,m_0,g_{11},g_{12},\\eta,\\rho_u)=(%.1f,%.1f,%.2f,%.4f,%.2f,%.1f)",lat.v0,lat.m0,lat.g1,lat.g2,η,ρu)|>latexstring
-    f = Figure(size=(9,4).*80)
-
-    ax1 = Axis(f[1,1],limits=(nothing,(-0.1,1).*0.1),title=title)
-    scatterlines!(w,real.(Xxx),label=L"\sigma^{sc}_{xy}",marker=:utriangle,markersize=6)
-
-    ax2 = Axis(f[1,2],limits=(nothing,(-1,1).*100),title=title)
-    scatterlines!(w,imag.(σxx),label=L"\sigma^{sc}_{xy}",marker=:utriangle,markersize=6)
-
-    f
-end
-scatterlines(w,imag.(Xxx))
