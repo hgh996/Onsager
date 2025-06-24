@@ -1,0 +1,1 @@
+code for "Generalized Onsager reciprocal relations of charge and spin transport"
